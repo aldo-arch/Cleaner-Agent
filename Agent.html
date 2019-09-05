@@ -1,0 +1,424 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD><TITLE>Vacuum Cleaner Agent</TITLE>
+<script>
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min) ) + min;
+}
+var lastMove=0
+var nochange=0;
+var removedItem=0;
+var moves=["L","R","U","D"]
+
+var roomLength=4;
+var agentPos="";
+var cleanA=0;
+var cleanB=0;
+var dirtyA=0;
+var dirtyB=0;
+var cleaned=0;
+var cleanedoneRoom=0;
+//performance
+var startTime=new Date;
+var EndTime=new Date;
+
+function End()
+{
+EndTime=new Date;
+var diff=(EndTime.getTime()-startTime.getTime())/1000
+var x='</br><br><B>Fshirja e dy dhomave u be per <span style="color:blue">'+diff+'</span> sekonda.<BR> Performanca e agjentit (zona te pastruara/sekond):<span style="color:blue">'+diff/(parseInt(dirtyA)+parseInt(dirtyB))+'</span></B>'
+document.getElementById("rez").innerHTML=x;
+}
+
+
+
+//deklarim i 2 dhomave
+var roomA = [];
+var roomB=[]
+
+
+
+function InitializeEnvironment(x)
+{
+for(var i=0; i<x.length; i++)
+	{
+		for (var j=0; j<x[i].length; j++)
+		{
+			x[i][j]=Math.round(Math.random())
+		}
+	}
+}
+
+function GetStartingAgentPos(room1,room2)
+{
+var coords='';
+var roomchoice=Math.round(Math.random())
+if(roomchoice==0)
+{
+var i=getRndInteger(0, room1.length)
+var j=getRndInteger(0, room1.length)
+ coords='A'+i+'-'+j;
+}
+else
+{
+var i=getRndInteger(0, room2.length)
+var j=getRndInteger(0, room2.length)
+ coords='B'+i+'-'+j;
+}
+return coords;
+}
+
+function Create(){
+roomLength=document.getElementById('MyVal').value;
+debugger;
+for(var i=0; i<roomLength; i++) {
+    roomA[i] = new Array(parseInt(roomLength));
+}
+
+for(var i=0; i<roomLength; i++) {
+    roomB[i] = new Array(parseInt(roomLength));
+}
+InitializeEnvironment(roomA)
+InitializeEnvironment(roomB)
+var x=document.getElementById("roomA");
+var html="<TABLE align='left' border='1px' width='40%'><TR ><th colspan='"+roomA.length+"'>Dhoma A</th></TR>"
+for (var i=0; i<roomA.length; i++)
+{ html+="<TR>";
+ for (var j=0; j<roomA[i].length; j++)
+	{if (roomA[i][j]==0) {html+="<TD class='white' id='A"+i+"-"+j+"'>CLEAN</TD>" 
+	cleanA++;}
+		else {html+="<TD class='black' id='A"+i+"-"+j+"'>DIRTY</TD>"
+		dirtyA++;
+		}
+			}
+	html+="</TR>";
+}
+html+="</TABLE>";
+
+x.innerHTML=html;
+
+var y=document.getElementById("roomB");
+var html="<TABLE align='center' border='1px' width='40%'><TR ><th colspan='"+roomB.length+"'>Dhoma B</th></TR>"
+for (var i=0; i<roomB.length; i++)
+{ html+="<TR>";
+ for (var j=0; j<roomB[i].length; j++)
+	{if (roomB[i][j]==0) {html+="<TD class='white' id='B"+i+"-"+j+"'>CLEAN</TD>" ;
+	cleanB++}
+		else {html+="<TD class='black' id='B"+i+"-"+j+"'>DIRTY</TD>"
+		dirtyB++;}
+			}
+	html+="</TR>";
+}
+html+="</TABLE>";
+
+y.innerHTML=html;
+
+document.getElementById("CA").innerHTML=cleanA;
+document.getElementById("CB").innerHTML=cleanB;
+document.getElementById("DA").innerHTML=dirtyA;
+document.getElementById("DB").innerHTML=dirtyB;
+
+agentPos=GetStartingAgentPos(roomA,roomB)
+var x=document.getElementById(agentPos).innerHTML='<img src="vacuum.png" height="40px" weight="40px"></img>'
+
+setTimeout(function() {
+    Sensor(agentPos);
+}, 300)
+}
+
+function Sensor(agentPos)
+{console.log(agentPos)
+var state=document.getElementById(agentPos).classList.contains('black')
+var split=agentPos.split('-');
+var currentRoom=split[0].charAt(0);
+
+if(state)
+{
+Suck(agentPos)
+return;
+}
+
+if(cleanedoneRoom==1)
+{
+if(cleaned==parseInt(dirtyA)+parseInt(dirtyB))
+{End()
+return;
+}
+}
+else{
+if(currentRoom=='A')
+{
+if(cleaned==dirtyA)
+{ChangeRoom(currentRoom,agentPos)
+return;
+}
+}
+else
+{
+if(cleaned==dirtyB)
+{
+ChangeRoom(currentRoom,agentPos)
+return;
+}
+}
+}
+//Logic2(agentPos)
+//Logic(agentPos)
+  var RandomMovement=getRndInteger(0, 4) 
+switch(RandomMovement)
+{case 0:Right(agentPos)
+ break;
+case 1:Left(agentPos) 
+break;
+case 2:Down(agentPos)
+ break;
+case 3:Up(agentPos) 
+break;
+}
+}
+
+
+function Suck(agentPos)
+{
+document.getElementById(agentPos).classList.remove('black');
+document.getElementById(agentPos).classList.add('white');
+cleaned++;
+setTimeout(function() {
+    Sensor(agentPos);
+}, 300)
+}
+
+function Right(agentPos)
+{
+var res = agentPos.split("-");
+var room=res[0].charAt(0);
+var  i=parseInt(res[0].charAt(1))
+var j=parseInt(res[1])
+if(j<roomLength-1)
+{j++
+}
+var newpos=res[0]+'-'+j
+document.getElementById(agentPos).innerHTML='CLEAN'
+document.getElementById(newpos).innerHTML='<img src="vacuum.png" height="40px" weight="40px"></img>'
+setTimeout(function() {
+    Sensor(newpos);
+}, 300)
+}
+
+function Up(agentPos){
+var res = agentPos.split("-");
+var room=res[0].charAt(0);
+var  i=parseInt(res[0].charAt(1))
+var j=parseInt(res[1])
+if(i>0)
+{i--}
+var newpos=room+i+'-'+j
+document.getElementById(agentPos).innerHTML='CLEAN'
+document.getElementById(newpos).innerHTML='<img src="vacuum.png" height="40px" weight="40px"></img>'
+setTimeout(function() {
+    Sensor(newpos);
+}, 300)
+}
+
+function Down(agentPos){
+var res = agentPos.split("-");
+var room=res[0].charAt(0);
+var  i=parseInt(res[0].charAt(1))
+var j=parseInt(res[1])
+if(i<roomLength-1)
+{i++}
+var newpos=room+i+'-'+j
+document.getElementById(agentPos).innerHTML='CLEAN'
+document.getElementById(newpos).innerHTML='<img src="vacuum.png" height="40px" weight="40px"></img>'
+setTimeout(function() {
+    Sensor(newpos);
+}, 300)
+}
+
+function Left(agentPos)
+{
+var res = agentPos.split("-");
+var room=res[0].charAt(0);
+var  i=parseInt(res[0].charAt(1))
+var j=parseInt(res[1])
+if(j>0)
+{j--
+}
+var newpos=res[0]+'-'+j
+document.getElementById(agentPos).innerHTML='CLEAN'
+document.getElementById(newpos).innerHTML='<img src="vacuum.png" height="40px" weight="40px"></img>'
+setTimeout(function() {
+    Sensor(newpos);
+}, 300)
+}
+
+
+function Logic(agentPos)
+{
+if(lastMove==0)
+{
+var index=getRndInteger(0,moves.length)
+var actualMove=moves[index]
+lastMove=actualMove;
+switch(actualMove){
+case "L":Left(agentPos)
+break;
+case "R":Right(agentPos)
+break;
+case "U":Up(agentPos)
+break;
+case "D":Down(agentPos)
+break
+}
+}
+else{
+debugger;
+if(removedItem!=0)
+{moves.push(removedItem[0]);}
+switch(lastMove)
+{
+case "L":var remove = moves.indexOf("R");
+removedItem=moves.splice(remove, 1);
+break;
+case "R":var remove = moves.indexOf("L");
+removedItem=moves.splice(remove, 1);
+break;
+case "U":var remove = moves.indexOf("D");
+removedItem=moves.splice(remove, 1);
+break;
+case "D":var remove = moves.indexOf("U");
+removedItem=moves.splice(remove, 1);
+break;
+}
+var index=getRndInteger(0,moves.length)
+var actualMove=moves[index]
+console.log('Levizja e vjeter-'+lastMove+':Levizja e re-'+actualMove);
+lastMove=actualMove;
+switch(actualMove){
+case "L":Left(agentPos)
+break;
+case "R":Right(agentPos)
+break;
+case "U":Up(agentPos)
+break;
+case "D":Down(agentPos)
+break
+}
+
+}
+
+
+}
+
+function Logic2(agentPos){
+debugger;
+var res = agentPos.split("-");
+var  i=parseInt(res[0].charAt(1))
+var j=parseInt(res[1])
+if(j==length-1 && i==length-1 && lastMove=='D2')
+{Up(agentPos)
+lastMove='U2'
+return}
+if(lastMove='U2' && j!=0)
+{Left(agentPos)
+return}
+if(j==0 && lastMove=='U2')
+{Up(agentPos)
+lastMove='U1'
+return}
+if(lastMove=='U1' && j!=length-1)
+{right(agentPos)
+return}
+if(j==length-1 && lastMove=='U1')
+{up(agentPos)
+lastMove='U2'
+return}
+if(lastMove=='D1' && j!=0)
+{Left(agentPos)
+return;
+}
+if(lastMove=='D2' && j!=length-1)
+{Right(agentPos)
+return}
+if(j<length-1 && j>0) {Right(agentPos)
+lastMove='R'}
+else 
+if(j==length-1)
+{Down(agentPos)
+lastMove='D1'
+}
+else
+if(j==0)
+{Down(agentPos)
+lastMove='D2'
+}
+
+{
+}
+
+
+
+
+}
+
+function ChangeRoom(room,agentPos)
+{
+if(room=='A')
+{newpos='B0-0'}
+else 
+{newpos='A0-0'}
+cleanedoneRoom++;
+document.getElementById(agentPos).innerHTML='CLEAN'
+document.getElementById(newpos).innerHTML='<img src="vacuum.png" height="40px" weight="40px"></img>'
+setTimeout(function() {
+    Sensor(newpos);
+}, 300)
+}
+</script>
+
+
+<style>
+.white{ width:50px;
+width:50px;
+height:50px;
+padding: 10px 10px 10px 10px;
+text-align:center;
+}
+.black{ background-color:black;
+color:white;
+width:50px;
+height:50px;
+padding: 10px 10px 10px 10px;
+text-align:center;
+}
+
+table{border-collapse:collapse}
+.blue {color:blue;
+	font-size:15px;
+	font-style:italic;
+	}
+</style>
+
+</HEAD>
+<BODY>
+<div style='display:inline'><h1> Agjenti per fshesen me korrent </h1> 
+<div>
+<br>
+<br>
+<p id="roomA" style="display:inline;  position:relative; right: 200px;"></p>
+<p id="roomB" style="display:inline; position:relative; left: 0px;"></p>
+<p style="display:inline">Kuti te Papastra Dhoma A:<span id="DA"></span> </p>  <p style="display:inline; position:relative; left:480px;">Kuti te Papastra Dhoma B:<span id="DB"></span> </p>
+<p style="display:inline">Kuti te Pastra Dhoma A:<span id="CA"></span></p>  <p style="display:inline; position:relative; left:480px;">Kuti te Pastra Dhoma B:<span id="CB"></span> </p>
+<div>
+<br>
+<br>
+<br>
+<div style='postion:relative; float:right; bottom:300px;'>
+<button onclick='Create()'>Simulo pastrimin</button> <label>Numri i kutive</label><input id='MyVal' type='number'/> </div>
+
+<div id='rez'>
+</div>
+
+</BODY>
+
+</HTML>
